@@ -11,29 +11,29 @@ import { AppWithStore, MobxNextPageContext } from "@Interfaces";
 
 import "@Static/css/main.scss";
 import { applySnapshot, getSnapshot, ModelCreationType } from "mobx-state-tree";
-import { RootStore, RootStoreType, StoreContext } from "../../src/models";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 import { createHttpClient, getDataFromTree } from "mst-gql";
 import { NextComponentType } from "next/dist/next-server/lib/utils";
+import { RootStore, RootStoreType, StoreContext } from "../../src/models";
 // #endregion Local Imports
 
-const isServer: boolean = !process.browser
+const isServer: boolean = !process.browser;
 
-let store: ModelCreationType<RootStoreType>
+let store: ModelCreationType<RootStoreType>;
 
-let accessToken: string | null = null
+let accessToken: string | null = null;
 
 const requestAccessToken = async () => {
-    if (accessToken) return
-    const res = await fetch(`${process.env.APP_HOST}/api/session`)
+    if (accessToken) return;
+    const res = await fetch(`${process.env.APP_HOST}/api/session`);
     if (res.ok) {
-        const json = await res.json()
-        accessToken = json.accessToken
+        const json = await res.json();
+        accessToken = json.accessToken;
     } else {
-        accessToken = 'public'
+        accessToken = "public";
     }
     return accessToken;
-}
+};
 
 const createWSClient = (url: string) => {
     return new SubscriptionClient(url, {
@@ -48,52 +48,59 @@ const createWSClient = (url: string) => {
         //     },
         //   }
         // }
-    })
-}
+    });
+};
 
-export function getStore(snapshot: RootStoreType | null = null): ModelCreationType<RootStoreType> {
+export function getStore(
+    snapshot: RootStoreType | null = null
+): ModelCreationType<RootStoreType> {
     if (isServer || !store) {
         store = RootStore.create(undefined, {
-            gqlHttpClient: createHttpClient("http://localhost:3000/api/graphql"),
+            gqlHttpClient: createHttpClient(
+                "http://localhost:3000/api/graphql"
+            ),
             // gqlWsClient: createWSClient('ws://localhost:8080/v1/graphql'),
-            ssr: true
-        })
+            ssr: true,
+        });
     }
     if (snapshot) {
-        applySnapshot(store, snapshot)
+        applySnapshot(store, snapshot);
     }
-    return store
+    return store;
 }
 
 class WebApp extends App<AppWithStore> {
-    store: ModelCreationType<RootStoreType>
+    store: ModelCreationType<RootStoreType>;
 
     static async getInitialProps({
         Component,
         ctx,
-        router
-    }: AppContext & {Component: NextComponentType<MobxNextPageContext>}) {
+        router,
+    }: AppContext & { Component: NextComponentType<MobxNextPageContext> }) {
         const store = getStore();
 
         const pageProps = Component.getInitialProps
-            ? await Component.getInitialProps({...ctx, store})
+            ? await Component.getInitialProps({ ...ctx, store })
             : {};
 
         let storeSnapshot = null;
         if (isServer) {
-            const tree = <WebApp {...{ Component, router, pageProps, store, storeSnapshot }} />
-            await getDataFromTree(tree, store)
-            storeSnapshot = getSnapshot<RootStoreType>(store)
+            const tree = (
+                <WebApp
+                    {...{ Component, router, pageProps, store, storeSnapshot }}
+                />
+            );
+            await getDataFromTree(tree, store);
+            storeSnapshot = getSnapshot<RootStoreType>(store);
         }
 
-        return { pageProps, storeSnapshot }
+        return { pageProps, storeSnapshot };
     }
-
 
     constructor(props: AppWithStore & AppProps) {
         super(props);
-        this.store = props.store || getStore(props.storeSnapshot)
-        Object.assign(global, { store: this.store }) // for debugging
+        this.store = props.store || getStore(props.storeSnapshot);
+        Object.assign(global, { store: this.store }); // for debugging
     }
 
     render() {

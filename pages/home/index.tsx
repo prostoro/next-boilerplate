@@ -20,14 +20,13 @@ import { Heading, LocaleButton } from "@Components";
 // #endregion Local Imports
 
 // #region Interface Imports
-import { IHomePage, MobxNextPageContext } from "@Interfaces";
+import { IHomePage } from "@Interfaces";
 // #endregion Interface Imports
 
 const Home: NextPage<IHomePage.IProps, IHomePage.InitialProps> = ({
     t,
     i18n,
 }) => {
-
     const renderLocaleButtons = (activeLanguage: string) =>
         ["en", "es", "tr"].map(lang => (
             <LocaleButton
@@ -77,9 +76,9 @@ const Home: NextPage<IHomePage.IProps, IHomePage.InitialProps> = ({
     );
 };
 
-Home.getInitialProps = async (
-    ctx: MobxNextPageContext
-): Promise<IHomePage.InitialProps> => {
+Home.getInitialProps = async (/* ctx: MobxNextPageContext */): Promise<
+    IHomePage.InitialProps
+> => {
     // await ctx.store.dispatch(
     //     HomeActions.GetApod({
     //         params: { hd: true },
