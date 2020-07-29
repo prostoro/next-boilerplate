@@ -1,8 +1,8 @@
 
-<img src="banner.jpg" alt="Performance oriented Next.js application boilerplate with Redux, Typescript, Express.js and Sass." align="center" />
+<img src="banner.jpg" alt="Performance oriented Next.js application boilerplate with MobX, Typescript, Express.js and Sass." align="center" />
 
 <br/>
-<div align="center" >Performance oriented Next.js application boilerplate with Redux, Typescript, Express.js and Sass.</div>
+<div align="center" >Performance oriented Next.js application boilerplate with MobX, Typescript, Express.js and Sass.</div>
 <br/>
 
 <div align="center">
@@ -52,7 +52,7 @@ next-boilerplate project provides a lot of features out of the box. Here's an ov
 
 * **Next.js** - Minimalistic framework for server-rendered React applications.
 * **Typescript** - Superset of JavaScript which primarily provides optional static typing, classes and interfaces.
-* **Redux** - A predictable state container for JavaScript apps.
+* **MobX** - A predictable state container for JavaScript apps.
 * **Express.js**- A minimal and flexible Node.js web application framework that handles server-side rendering and integrates with Next.js.
 * **Built-in Project CLI**- Create pages, components, actions, reducers with one command by using built-in cli.
 * **Sass/Scss** - CSS preprocessor, which adds special features such as variables, nested rules and mixins (sometimes referred to as syntactic sugar) into regular CSS.

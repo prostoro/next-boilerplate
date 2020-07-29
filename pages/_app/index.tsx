@@ -1,43 +1,112 @@
 // #region Global Imports
 import * as React from "react";
-import App, { AppInitialProps, AppContext } from "next/app";
-import { Provider } from "react-redux";
+import App, { AppContext, AppProps } from "next/app";
 import { ThemeProvider } from "styled-components";
-import withRedux from "next-redux-wrapper";
 // #endregion Global Imports
 
 // #region Local Imports
 import { theme } from "@Definitions/Styled";
 import { appWithTranslation } from "@Server/i18n";
-import { AppWithStore } from "@Interfaces";
-import { makeStore } from "@Redux";
+import { AppWithStore, MobxNextPageContext } from "@Interfaces";
 
 import "@Static/css/main.scss";
+import { applySnapshot, getSnapshot, ModelCreationType } from "mobx-state-tree";
+import { RootStore, RootStoreType, StoreContext } from "../../src/models";
+import { SubscriptionClient } from "subscriptions-transport-ws";
+import { createHttpClient, getDataFromTree } from "mst-gql";
+import { NextComponentType } from "next/dist/next-server/lib/utils";
 // #endregion Local Imports
 
+const isServer: boolean = !process.browser
+
+let store: ModelCreationType<RootStoreType>
+
+let accessToken: string | null = null
+
+const requestAccessToken = async () => {
+    if (accessToken) return
+    const res = await fetch(`${process.env.APP_HOST}/api/session`)
+    if (res.ok) {
+        const json = await res.json()
+        accessToken = json.accessToken
+    } else {
+        accessToken = 'public'
+    }
+    return accessToken;
+}
+
+const createWSClient = (url: string) => {
+    return new SubscriptionClient(url, {
+        lazy: true,
+        reconnect: true,
+        // connectionParams: async () => {
+        //   const token = await requestAccessToken() // happens on the client
+        //   console.log("access token", token);
+        //   return {
+        //     headers: {
+        //       authorization: token ? `Bearer ${token}` : '',
+        //     },
+        //   }
+        // }
+    })
+}
+
+export function getStore(snapshot: RootStoreType | null = null): ModelCreationType<RootStoreType> {
+    if (isServer || !store) {
+        store = RootStore.create(undefined, {
+            gqlHttpClient: createHttpClient("http://localhost:3000/api/graphql"),
+            // gqlWsClient: createWSClient('ws://localhost:8080/v1/graphql'),
+            ssr: true
+        })
+    }
+    if (snapshot) {
+        applySnapshot(store, snapshot)
+    }
+    return store
+}
+
 class WebApp extends App<AppWithStore> {
+    store: ModelCreationType<RootStoreType>
+
     static async getInitialProps({
         Component,
         ctx,
-    }: AppContext): Promise<AppInitialProps> {
+        router
+    }: AppContext & {Component: NextComponentType<MobxNextPageContext>}) {
+        const store = getStore();
+
         const pageProps = Component.getInitialProps
-            ? await Component.getInitialProps(ctx)
+            ? await Component.getInitialProps({...ctx, store})
             : {};
 
-        return { pageProps };
+        let storeSnapshot = null;
+        if (isServer) {
+            const tree = <WebApp {...{ Component, router, pageProps, store, storeSnapshot }} />
+            await getDataFromTree(tree, store)
+            storeSnapshot = getSnapshot<RootStoreType>(store)
+        }
+
+        return { pageProps, storeSnapshot }
+    }
+
+
+    constructor(props: AppWithStore & AppProps) {
+        super(props);
+        this.store = props.store || getStore(props.storeSnapshot)
+        Object.assign(global, { store: this.store }) // for debugging
     }
 
     render() {
-        const { Component, pageProps, store } = this.props;
+        const { Component, pageProps } = this.props;
 
         return (
-            <Provider store={store}>
+            <StoreContext.Provider value={this.store}>
                 <ThemeProvider theme={theme}>
                     <Component {...pageProps} />
                 </ThemeProvider>
-            </Provider>
+            </StoreContext.Provider>
         );
     }
 }
 
-export default withRedux(makeStore)(appWithTranslation(WebApp));
+export default appWithTranslation(WebApp);

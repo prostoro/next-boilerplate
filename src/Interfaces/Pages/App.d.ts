@@ -1,18 +1,15 @@
 // #region Global Imports
-import { Store } from "redux";
 import { AppInitialProps } from "next/app";
 import { NextPageContext } from "next";
-import { ThunkDispatch } from "redux-thunk";
+import { ModelCreationType } from "mobx-state-tree";
+import { RootStoreType } from "../../models";
 // #endregion Global Imports
 
-interface AppStore extends Store {
-    dispatch: ThunkDispatch;
-}
-
 export interface AppWithStore extends AppInitialProps {
-    store: AppStore;
+    store: ModelCreationType<RootStoreType>;
+    storeSnapshot: RootStoreType | null;
 }
 
-export interface ReduxNextPageContext extends NextPageContext {
-    store: AppStore;
+export interface MobxNextPageContext extends NextPageContext {
+    store: ModelCreationType<RootStoreType>;
 }

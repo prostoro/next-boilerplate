@@ -129,8 +129,8 @@ class Index extends React.Component {
 			<Block background="light" align="center">
 				{[
 					{
-						content: 'This boilerplate manages application state using Redux.',
-						image: `${baseUrl}img/redux.svg`,
+						content: 'This boilerplate manages application state using MobX.',
+						image: `${baseUrl}img/mobx.svg`,
 						imageAlign: 'bottom',
 						title: 'Redux',
 					},
